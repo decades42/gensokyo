@@ -1,0 +1,8 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add: [
+    -std=c++2b,
+    -I ./src/library/include
+  ]
+Diagnostics:
+  UnusedIncludes: Strict

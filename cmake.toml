@@ -1,0 +1,55 @@
+# Reference: https://build-cpp.github.io/cmkr/cmake-toml
+[project]
+name = "gensokyo"
+
+[conditions]
+build-tests = "BUILD_TESTS"
+
+[fetch-content]
+fmt = { git = "https://github.com/fmtlib/fmt", tag = "f449ca0525098380e0caff6c452c617b3d58879b" }
+
+[fetch-content.Catch2]
+condition = "build-tests"
+git = "https://github.com/catchorg/Catch2"
+tag = "v3.3.2"
+shallow = true
+
+[target.library]
+type = "static"
+alias = "gensokyo::gensokyo"
+sources = [
+    "./src/*.cpp",
+]
+include-directories = ["./include/"]
+link-libraries = ["fmt::fmt"]
+compile-features = ["cxx_std_23"]
+# Compile definitions
+windows.compile-definitions = [
+    "NOMINMAX",
+    "WINDOWS",
+]
+linux.compile-definitions = ["LINUX"]
+msvc.compile-definitions = ["MSVC"]
+gcc.compile-definitions = ["GCC"]
+clang.compile-definitions = ["clang"]
+x32.compile-definitions = ["ENVIRONMENT32"]
+x64.compile-definitions = ["ENVIRONMENT64"]
+msvc.private-compile-options = ["/permissive-", "/w14640", "/EHsc", "/MP"]
+gcc.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]
+clang.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]
+
+[template.test]
+condition = "build-tests"
+type = "executable"
+compile-features = ["cxx_std_23"]
+link-libraries = ["Catch2::Catch2WithMain", "gensokyo::gensokyo"]
+msvc.private-compile-options = ["/permissive-", "/w14640", "/EHsc", "/MP"]
+gcc.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]
+
+[target.pattern]
+type = "test"
+sources = ["tests/pattern.cpp"]
+
+[target.cpu]
+type = "test"
+sources = ["tests/cpu.cpp"]
