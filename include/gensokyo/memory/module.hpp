@@ -31,9 +31,10 @@ namespace gensokyo::impl
 
     class Module
     {
-    public:
+      public:
         using FunctionCallbackFn = std::function<void(const std::vector<uint8_t>&)>;
-    private:
+
+      private:
         std::vector<Segments> _segments {};
         std::uintptr_t _baseAddress {};
         std::size_t _size {};

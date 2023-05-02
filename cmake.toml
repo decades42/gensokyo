@@ -19,16 +19,17 @@ type = "static"
 alias = "gensokyo::gensokyo"
 
 sources = [
-    "./src/*.cpp",
+    "src/*.cpp",
 ]
 windows.sources = [
-    "./src/windows/*.cpp",
+    "src/windows/*.cpp",
 ]
 linux.sources = [
-    "./src/linux/*.cpp",
+    "src/linux/*.cpp",
 ]
 
-include-directories = ["./include/"]
+include-directories = ["include/"]
+
 link-libraries = ["fmt::fmt"]
 compile-features = ["cxx_std_23"]
 
@@ -51,14 +52,20 @@ clang.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-
 condition = "build-tests"
 type = "executable"
 compile-features = ["cxx_std_23"]
-link-libraries = ["Catch2::Catch2WithMain", "gensokyo::gensokyo"]
+link-libraries = ["gensokyo::gensokyo"]
 msvc.private-compile-options = ["/permissive-", "/w14640", "/EHsc", "/MP"]
 gcc.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]
 
 [target.pattern]
 type = "test"
 sources = ["tests/pattern.cpp"]
+link-libraries = ["Catch2::Catch2WithMain"]
 
 [target.cpu]
 type = "test"
 sources = ["tests/cpu.cpp"]
+
+[target.win_process]
+condition = "windows"
+type = "test"
+sources = ["tests/win_process.cpp"]

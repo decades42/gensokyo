@@ -56,21 +56,24 @@ if(BUILD_TESTS) # build-tests
 endif()
 # Target: library
 set(library_SOURCES
-	"./src/math_funcs.cpp"
-	"./src/memory.cpp"
-	"./src/pattern.cpp"
+	"src/math_funcs.cpp"
+	"src/memory.cpp"
+	"src/pattern.cpp"
+	"src/process.cpp"
 	cmake.toml
 )
 
 if(WIN32) # windows
 	list(APPEND library_SOURCES
-		"./src/windows/module.cpp"
+		"src/windows/module.cpp"
+		"src/windows/win_process.cpp"
 	)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux") # linux
 	list(APPEND library_SOURCES
-		"./src/linux/module.cpp"
+		"src/linux/linux_process.cpp"
+		"src/linux/module.cpp"
 	)
 endif()
 
@@ -157,7 +160,7 @@ if((CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_COMPILER_FRONTEND_VA
 endif()
 
 target_include_directories(library PUBLIC
-	"./include/"
+	"include/"
 )
 
 target_link_libraries(library PUBLIC
@@ -200,8 +203,11 @@ if(BUILD_TESTS) # build-tests
 	endif()
 
 	target_link_libraries(pattern PRIVATE
-		Catch2::Catch2WithMain
 		gensokyo::gensokyo
+	)
+
+	target_link_libraries(pattern PRIVATE
+		Catch2::Catch2WithMain
 	)
 
 	get_directory_property(CMKR_VS_STARTUP_PROJECT DIRECTORY ${PROJECT_SOURCE_DIR} DEFINITION VS_STARTUP_PROJECT)
@@ -246,7 +252,6 @@ if(BUILD_TESTS) # build-tests
 	endif()
 
 	target_link_libraries(cpu PRIVATE
-		Catch2::Catch2WithMain
 		gensokyo::gensokyo
 	)
 
@@ -255,4 +260,51 @@ if(BUILD_TESTS) # build-tests
 		set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT cpu)
 	endif()
 
+endif()
+# Target: win_process
+if(BUILD_TESTS) # build-tests
+	if(WIN32) # windows
+		set(win_process_SOURCES
+			"tests/win_process.cpp"
+			cmake.toml
+		)
+
+		add_executable(win_process)
+
+		target_sources(win_process PRIVATE ${win_process_SOURCES})
+		source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${win_process_SOURCES})
+
+		target_compile_features(win_process PRIVATE
+			cxx_std_23
+		)
+
+		if(MSVC) # msvc
+			target_compile_options(win_process PRIVATE
+				"/permissive-"
+				"/w14640"
+				"/EHsc"
+				"/MP"
+			)
+		endif()
+
+		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "GNU") # gcc
+			target_compile_options(win_process PRIVATE
+				-Wall
+				-Wextra
+				-Wshadow
+				-pedantic
+				-march=native
+			)
+		endif()
+
+		target_link_libraries(win_process PRIVATE
+			gensokyo::gensokyo
+		)
+
+		get_directory_property(CMKR_VS_STARTUP_PROJECT DIRECTORY ${PROJECT_SOURCE_DIR} DEFINITION VS_STARTUP_PROJECT)
+		if(NOT CMKR_VS_STARTUP_PROJECT)
+			set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT win_process)
+		endif()
+
+	endif()
 endif()
