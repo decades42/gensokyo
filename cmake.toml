@@ -17,13 +17,21 @@ shallow = true
 [target.library]
 type = "static"
 alias = "gensokyo::gensokyo"
+
 sources = [
     "./src/*.cpp",
 ]
+windows.sources = [
+    "./src/windows/*.cpp",
+]
+linux.sources = [
+    "./src/linux/*.cpp",
+]
+
 include-directories = ["./include/"]
 link-libraries = ["fmt::fmt"]
 compile-features = ["cxx_std_23"]
-# Compile definitions
+
 windows.compile-definitions = [
     "NOMINMAX",
     "WINDOWS",
@@ -31,9 +39,10 @@ windows.compile-definitions = [
 linux.compile-definitions = ["LINUX"]
 msvc.compile-definitions = ["MSVC"]
 gcc.compile-definitions = ["GCC"]
-clang.compile-definitions = ["clang"]
+clang.compile-definitions = ["CLANG"]
 x32.compile-definitions = ["ENVIRONMENT32"]
 x64.compile-definitions = ["ENVIRONMENT64"]
+
 msvc.private-compile-options = ["/permissive-", "/w14640", "/EHsc", "/MP"]
 gcc.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]
 clang.private-compile-options = ["-Wall", "-Wextra", "-Wshadow", "-pedantic", "-march=native"]

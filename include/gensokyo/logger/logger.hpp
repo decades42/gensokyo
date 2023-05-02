@@ -31,14 +31,14 @@ namespace gensokyo::impl
         Logger& operator=(Logger&&)      = default;
 
 #ifdef WINDOWS
-        bool setup()
+        bool setup(std::string_view title = "gensokyo")
         {
             _initialized = AllocConsole();
             if (!_initialized)
                 return false;
 
             freopen_s(reinterpret_cast<_iobuf**>(stdout), "CONOUT$", "w", stdout);
-            SetConsoleTitleA("gensokyo");
+            SetConsoleTitleA(title.data());
 
             // enable color support
             auto std_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -93,5 +93,5 @@ namespace gensokyo::impl
 
 namespace gensokyo
 {
-    inline std::unique_ptr<impl::Logger> logger {};
+    inline impl::Logger logger {};
 }

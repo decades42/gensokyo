@@ -58,10 +58,21 @@ endif()
 set(library_SOURCES
 	"./src/math_funcs.cpp"
 	"./src/memory.cpp"
-	"./src/module.cpp"
 	"./src/pattern.cpp"
 	cmake.toml
 )
+
+if(WIN32) # windows
+	list(APPEND library_SOURCES
+		"./src/windows/module.cpp"
+	)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux") # linux
+	list(APPEND library_SOURCES
+		"./src/linux/module.cpp"
+	)
+endif()
 
 add_library(library STATIC)
 
@@ -96,7 +107,7 @@ endif()
 
 if((CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "^MSVC$") OR (CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_C_COMPILER_FRONTEND_VARIANT MATCHES "^MSVC$")) # clang
 	target_compile_definitions(library PUBLIC
-		clang
+		CLANG
 	)
 endif()
 

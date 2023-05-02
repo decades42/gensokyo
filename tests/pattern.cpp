@@ -58,7 +58,7 @@ constexpr std::string_view type_name()
 TEST_CASE("NoWildcard", "MakePattern")
 {
     auto pattern = gensokyo::pattern::Type("00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF");
-    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<' ', '?'>");
+    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<>");
     REQUIRE(pattern.size() == 16);
     REQUIRE(pattern[0] == 0x00);
     REQUIRE(pattern[1] == 0x11);
@@ -106,7 +106,7 @@ TEST_CASE("NoWildcard", "MakePattern")
 TEST_CASE("FullWildcard", "MakePattern")
 {
     auto pattern = gensokyo::pattern::Type("00 ? 22 ?? 44 ? 66 ?? 88 ? AA ?? CC ? EE ??");
-    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<' ', '?'>");
+    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<>");
     REQUIRE(pattern.size() == 16);
     REQUIRE(pattern[0] == 0x00);
     REQUIRE(pattern[1].has_value() == false);
@@ -154,13 +154,12 @@ TEST_CASE("FullWildcard", "MakePattern")
 TEST_CASE("OneWildcard", "MakePattern")
 {
     auto pattern = gensokyo::pattern::Type("00 ?1 2?");
-    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<' ', '?'>");
+    REQUIRE(type_name<decltype(pattern)>() == "gensokyo::pattern::impl::Pattern<>");
     REQUIRE(pattern.size() == 3);
     REQUIRE(pattern[0] == 0x00);
     REQUIRE(pattern[1].has_value() == false);
     REQUIRE(pattern[2].has_value() == false);
 
-#if !defined(WINDOWS)
     SECTION("Compiletime")
     {
         auto pattern_compile_time = GENSOKYO_MAKE_PATTERN("00 ?1 2?");
@@ -170,7 +169,6 @@ TEST_CASE("OneWildcard", "MakePattern")
         REQUIRE(pattern_compile_time[1].has_value() == false);
         REQUIRE(pattern_compile_time[2].has_value() == false);
     }
-#endif
 }
 
 TEST_CASE("Different delimiter", "MakePattern")
@@ -319,15 +317,13 @@ TEST_CASE("PatternBenchmark", "FindPattern")
 
     // INFO("Pattern list: " << patterns.size());
 
-    auto buffer_data  = buffer.data();
     auto buffer_data_ = reinterpret_cast<uintptr_t>(buffer.data()) - 0xC00;
-    auto buffer_size  = buffer.size();
 
     SECTION("BruteForce")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_brute_force(buffer, pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -337,17 +333,36 @@ TEST_CASE("PatternBenchmark", "FindPattern")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_std(buffer, pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
     }
 
-    SECTION("SIMD")
+    SECTION("SIMD_AVX2")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer_data, buffer_size, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer, pattern.pattern.bytes);
+            REQUIRE(buffer_data_ + pattern.offset == res.ptr);
+        }
+    }
+
+    SECTION("SIMD_SSE")
+    {
+        for (auto&& pattern : patterns)
+        {
+            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer, pattern.pattern.bytes);
+            INFO("Scanning " << pattern.name << " with bytes.size() " << pattern.pattern.size());
+            REQUIRE(buffer_data_ + pattern.offset == res.ptr);
+        }
+    }
+
+    SECTION("Hybrid")
+    {
+        for (auto&& pattern : patterns)
+        {
+            auto res = gensokyo::pattern::find(buffer, pattern.pattern);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
     }
@@ -361,7 +376,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_brute_force(buffer, pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -374,20 +389,46 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_std(buffer, pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
               });
         };
-        BENCHMARK_ADVANCED("SIMD")(Catch::Benchmark::Chronometer meter)
+        BENCHMARK_ADVANCED("SIMD_AVX2")(Catch::Benchmark::Chronometer meter)
         {
             meter.measure(
               [&]
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer_data, buffer_size, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer, pattern.pattern.bytes);
+                      INFO("Scanning " << pattern.name);
+                      REQUIRE(buffer_data_ + pattern.offset == res.ptr);
+                  }
+              });
+        };
+        BENCHMARK_ADVANCED("SIMD_SSE")(Catch::Benchmark::Chronometer meter)
+        {
+            meter.measure(
+              [&]
+              {
+                  for (auto&& pattern : patterns)
+                  {
+                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer, pattern.pattern.bytes);
+                      INFO("Scanning " << pattern.name);
+                      REQUIRE(buffer_data_ + pattern.offset == res.ptr);
+                  }
+              });
+        };
+        BENCHMARK_ADVANCED("Hybrid")(Catch::Benchmark::Chronometer meter)
+        {
+            meter.measure(
+              [&]
+              {
+                  for (auto&& pattern : patterns)
+                  {
+                      auto res = gensokyo::pattern::find(buffer, pattern.pattern);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }

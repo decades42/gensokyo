@@ -83,7 +83,7 @@ namespace gensokyo::pattern
         }
 
         template <auto str>
-        inline consteval auto make_pattern()
+        inline constexpr auto make_pattern()
         {
             const auto sig      = impl::parse_pattern(str.data());
             constexpr auto size = impl::parse_pattern(str.data()).size();
@@ -99,6 +99,8 @@ namespace gensokyo::pattern
             constexpr Pattern(std::string_view pattern)
             {
                 bytes = parse_pattern<Delimiter, Wildcard>(pattern);
+                if (!bytes.front().has_value())
+                    throw std::invalid_argument("A pattern shouldn't start with a wildcard!!");
             }
 
             constexpr std::size_t size() const
@@ -114,17 +116,15 @@ namespace gensokyo::pattern
             std::vector<HexData> bytes;
         };
 
-        gensokyo::Address find_brute_force(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
-        gensokyo::Address find_std(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
+        gensokyo::Address find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
+        gensokyo::Address find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
 
         template <typename SIMD>
-        gensokyo::Address find_simd(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
+        gensokyo::Address find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
     }
 
-    template <std::size_t N>
-    gensokyo::Address find(std::uint8_t* data, std::size_t size, const std::array<impl::HexData, N>& pattern);
-
-    gensokyo::Address find(std::uint8_t* data, std::size_t size, const std::span<impl::HexData>& pattern);
+    gensokyo::Address find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern);
+    gensokyo::Address find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern);
 
     using Type = impl::Pattern<' ', '?'>;
 }

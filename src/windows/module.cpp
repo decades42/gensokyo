@@ -1,22 +1,17 @@
 #include <gensokyo.hpp>
 
-#ifdef WINDOWS
-    #include <minwindef.h>
-    #include <Windows.h>
-#endif
-
+#include <minwindef.h>
+#include <Windows.h>
 #include <stdexcept>
-#include <string>
 
-gensokyo::impl::Module::Module(const std::string& str)
+gensokyo::impl::Module::Module(const std::string_view str, const FunctionCallbackFn& func)
 {
-    get_module_nfo(str);
+    get_module_nfo(str, func);
 }
 
-void gensokyo::impl::Module::get_module_nfo(std::string_view str)
+void gensokyo::impl::Module::get_module_nfo(std::string_view mod, const FunctionCallbackFn& func)
 {
-#ifdef WINDOWS
-    const auto handle = GetModuleHandleA(str.empty() ? nullptr : str.data());
+    const auto handle = GetModuleHandleA(mod.empty() ? nullptr : mod.data());
     if (!handle)
         throw std::runtime_error("Failed to get module handle");
 
@@ -48,23 +43,24 @@ void gensokyo::impl::Module::get_module_nfo(std::string_view str)
         }
     }
 
-    if (!logger)
-        return;
+    logger.success("{} | base_addr:{:#05x} | size:{:#05x} | _segments.size():{}", mod, _baseAddress, _size, _segments.size());
 
-    logger->success("{} | base_addr:{:#05x} | size:{:#05x} | _segments.size():{}", str, _baseAddress, _size, _segments.size());
-#endif
+    if (func)
+    {
+        const auto start = reinterpret_cast<uint8_t*>(handle);
+        const std::vector data(start, start + _size);
+        func(data);
+    }
 }
 
-void* gensokyo::impl::Module::get_proc(std::string_view proc_name)
+void* gensokyo::impl::Module::get_proc(const std::string_view proc_name)
 {
-#ifdef WINDOWS
     if (!this->_handle)
-        throw std::runtime_error("Invalid module handle  when getting ProcAddress");
+        throw std::runtime_error("Invalid module handle when getting ProcAddress");
 
     if (const auto address = GetProcAddress(static_cast<HMODULE>(_handle), proc_name.data()); address)
     {
         return address;
     }
-#endif
-    return nullptr;
+    throw std::runtime_error(fmt::format("Cannot get proc with name {}", proc_name));
 }

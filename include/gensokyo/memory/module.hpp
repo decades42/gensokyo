@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <span>
+#include <functional>
 
 namespace gensokyo::impl
 {
@@ -14,8 +16,7 @@ namespace gensokyo::impl
 
         Segments(std::uintptr_t address_, std::uint8_t* data_, std::size_t size_)
          : address(address_),
-           data(data_),
-           size(size_)
+           data(data_, size_)
         {
         }
 
@@ -24,21 +25,21 @@ namespace gensokyo::impl
         Segments& operator=(const Segments&) = default;
         Segments& operator=(Segments&&)      = default;
 
-        std::uintptr_t address;
-        std::uint8_t* data;
-        std::size_t size;
+        std::uintptr_t address {};
+        std::span<std::uint8_t> data {};
     };
 
     class Module
     {
-        // std::string _name;
-        std::vector<Segments> _segments;
-        // std::vector<uint8_t> _data;
-        std::uintptr_t _baseAddress;
-        std::size_t _size;
+    public:
+        using FunctionCallbackFn = std::function<void(const std::vector<uint8_t>&)>;
+    private:
+        std::vector<Segments> _segments {};
+        std::uintptr_t _baseAddress {};
+        std::size_t _size {};
 
-        void* _handle;
-        void get_module_nfo(std::string_view mod);
+        void* _handle {};
+        void get_module_nfo(std::string_view mod, const FunctionCallbackFn& func = nullptr);
 
       public:
         Module()                         = default;
@@ -47,7 +48,7 @@ namespace gensokyo::impl
         Module& operator=(const Module&) = default;
         Module& operator=(Module&&)      = default;
 
-        explicit Module(const std::string& str);
+        explicit Module(std::string_view str, const FunctionCallbackFn& func = nullptr);
 
         // get rwx segments of a module
         std::vector<Segments>& get_segments()
