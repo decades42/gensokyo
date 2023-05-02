@@ -114,17 +114,17 @@ namespace gensokyo::pattern
             std::vector<HexData> bytes;
         };
 
-        gensokyo::Address find_brute_force(std::uint8_t* data, std::size_t size, const HexData* pattern, std::size_t pattern_size);
-        gensokyo::Address find_std(std::uint8_t* data, std::size_t size, const HexData* pattern, std::size_t pattern_size);
+        gensokyo::Address find_brute_force(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
+        gensokyo::Address find_std(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
 
         template <typename SIMD>
-        gensokyo::Address find_simd(std::uint8_t* data, std::size_t size, const HexData* pattern, std::size_t pattern_size);
+        gensokyo::Address find_simd(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern);
     }
 
     template <std::size_t N>
     gensokyo::Address find(std::uint8_t* data, std::size_t size, const std::array<impl::HexData, N>& pattern);
 
-    gensokyo::Address find(std::uint8_t* data, std::size_t size, const impl::HexData* pattern, std::size_t pattern_size);
+    gensokyo::Address find(std::uint8_t* data, std::size_t size, const std::span<impl::HexData>& pattern);
 
     using Type = impl::Pattern<' ', '?'>;
 }

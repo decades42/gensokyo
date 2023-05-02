@@ -325,10 +325,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
 
     SECTION("BruteForce")
     {
-        for (const auto& pattern : patterns)
+        for (auto&& pattern : patterns)
         {
-            const auto& bytes = pattern.pattern.bytes;
-            auto res          = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, bytes.data(), bytes.size());
+            auto res = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -336,10 +335,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
 
     SECTION("std::find & std::equal")
     {
-        for (const auto& pattern : patterns)
+        for (auto&& pattern : patterns)
         {
-            const auto& bytes = pattern.pattern.bytes;
-            auto res          = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, bytes.data(), bytes.size());
+            auto res = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -347,11 +345,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
 
     SECTION("SIMD")
     {
-        for (const auto& pattern : patterns)
+        for (auto&& pattern : patterns)
         {
-            const auto& bytes = pattern.pattern.bytes;
-            auto res          = gensokyo::pattern::find(buffer_data, buffer_size, bytes.data(), bytes.size());
-            INFO("Scanning " << pattern.name << " with bytes.size():" << bytes.size());
+            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer_data, buffer_size, pattern.pattern.bytes);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
     }
@@ -363,10 +359,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
             meter.measure(
               [&]
               {
-                  for (const auto& pattern : patterns)
+                  for (auto&& pattern : patterns)
                   {
-                      const auto& bytes = pattern.pattern.bytes;
-                      auto res          = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, bytes.data(), bytes.size());
+                      auto res = gensokyo::pattern::impl::find_brute_force(buffer_data, buffer_size, pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -377,10 +372,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
             meter.measure(
               [&]
               {
-                  for (const auto& pattern : patterns)
+                  for (auto&& pattern : patterns)
                   {
-                      const auto& bytes = pattern.pattern.bytes;
-                      auto res          = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, bytes.data(), bytes.size());
+                      auto res = gensokyo::pattern::impl::find_std(buffer_data, buffer_size, pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -391,10 +385,9 @@ TEST_CASE("PatternBenchmark", "FindPattern")
             meter.measure(
               [&]
               {
-                  for (const auto& pattern : patterns)
+                  for (auto&& pattern : patterns)
                   {
-                      const auto& bytes = pattern.pattern.bytes;
-                      auto res          = gensokyo::pattern::find(buffer_data, buffer_size, bytes.data(), bytes.size());
+                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer_data, buffer_size, pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
