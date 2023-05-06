@@ -1,7 +1,7 @@
 #include <gensokyo.hpp>
 #include <bitset>
 
-gensokyo::Address gensokyo::pattern::impl::find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern)
+gensokyo::Address gensokyo::pattern::impl::find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
 {
     const auto pattern_size = pattern.size();
     const auto end          = data.end() - pattern_size;
@@ -28,7 +28,7 @@ gensokyo::Address gensokyo::pattern::impl::find_brute_force(const std::span<std:
 }
 
 // https://github.com/BasedInc/libhat
-gensokyo::Address gensokyo::pattern::impl::find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern)
+gensokyo::Address gensokyo::pattern::impl::find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
 {
     const auto pattern_size = pattern.size();
     const auto end          = data.end() - pattern_size;
@@ -60,7 +60,7 @@ gensokyo::Address gensokyo::pattern::impl::find_std(const std::span<std::uint8_t
 }
 
 template <typename SIMD>
-gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern)
+gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
 {
     constexpr int simd_length = SIMD::simd_length;
     const auto pattern_size   = pattern.size();
@@ -152,7 +152,7 @@ gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_
     return find_std(std::span(reinterpret_cast<std::uint8_t*>(simd_data_ptr), remaining_size), pattern);
 }
 
-gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern)
+gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern) noexcept
 {
     const auto arch = cpu.get_arch();
 
@@ -168,7 +168,7 @@ gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, c
     return impl::find_std(data, pattern);
 }
 
-gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern)
+gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern) noexcept
 {
     return find(data, pattern.bytes);
 }

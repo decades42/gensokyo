@@ -10,6 +10,7 @@
 #include <gensokyo/memory/memory.hpp>
 #include <gensokyo/memory/module.hpp>
 #include <gensokyo/memory/pattern.hpp>
+#include <gensokyo/memory/process.hpp>
 #if defined(WINDOWS)
     #include <gensokyo/memory/windows/win_process.hpp>
 #elif defined(LINUX)

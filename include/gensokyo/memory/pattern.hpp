@@ -14,7 +14,7 @@ namespace gensokyo::pattern
     {
         using HexData = std::optional<std::uint8_t>;
 
-        [[nodiscard]] static constexpr std::optional<uint8_t> hex_char_to_byte(char c)
+        [[nodiscard]] static constexpr std::optional<uint8_t> hex_char_to_byte(char c) noexcept
         {
             if (c >= '0' && c <= '9')
                 return c - '0';
@@ -27,7 +27,7 @@ namespace gensokyo::pattern
         }
 
         template <char Wildcard = '?'>
-        [[nodiscard]] static constexpr std::optional<std::uint8_t> parse_hex(std::string_view str)
+        [[nodiscard]] static constexpr std::optional<std::uint8_t> parse_hex(std::string_view str) noexcept
         {
             if (str.size() == 1 && str.front() == Wildcard)
                 return std::nullopt;
@@ -61,7 +61,7 @@ namespace gensokyo::pattern
         }
 
         template <char Delimiter = ' ', char Wildcard = '?'>
-        [[nodiscard]] static constexpr std::vector<HexData> parse_pattern(std::string_view pattern)
+        [[nodiscard]] static constexpr std::vector<HexData> parse_pattern(std::string_view pattern) noexcept
         {
             std::vector<HexData> result {};
             for (const auto& str : pattern | std::views::split(Delimiter))
@@ -74,7 +74,7 @@ namespace gensokyo::pattern
 
         // https://stackoverflow.com/a/73014828
         template <auto N>
-        static constexpr auto str(char const (&cstr)[N])
+        static constexpr auto str(char const (&cstr)[N]) noexcept
         {
             std::array<char, N> arr;
             for (std::size_t i = 0; i < N; ++i)
@@ -83,7 +83,7 @@ namespace gensokyo::pattern
         }
 
         template <auto str>
-        inline constexpr auto make_pattern()
+        inline constexpr auto make_pattern() noexcept
         {
             const auto sig      = impl::parse_pattern(str.data());
             constexpr auto size = impl::parse_pattern(str.data()).size();
@@ -103,12 +103,12 @@ namespace gensokyo::pattern
                     throw std::invalid_argument("A pattern shouldn't start with a wildcard!!");
             }
 
-            constexpr std::size_t size() const
+            constexpr std::size_t size() const noexcept
             {
                 return bytes.size();
             }
 
-            constexpr const HexData& operator[](std::size_t index) const
+            constexpr const HexData& operator[](std::size_t index) const noexcept
             {
                 return bytes[index];
             }
@@ -116,15 +116,15 @@ namespace gensokyo::pattern
             std::vector<HexData> bytes;
         };
 
-        gensokyo::Address find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
-        gensokyo::Address find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
+        gensokyo::Address find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
+        gensokyo::Address find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
 
         template <typename SIMD>
-        gensokyo::Address find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern);
+        gensokyo::Address find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
     }
 
-    gensokyo::Address find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern);
-    gensokyo::Address find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern);
+    gensokyo::Address find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern) noexcept;
+    gensokyo::Address find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern) noexcept;
 
     using Type = impl::Pattern<' ', '?'>;
 }

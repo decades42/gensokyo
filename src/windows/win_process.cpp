@@ -57,7 +57,7 @@ bool gensokyo::WinProcess::attach_by_process_name(std::string_view process_name)
     {
         if (process_name == entry.szExeFile)
         {
-            const auto handle = OpenProcess(PROCESS_ALL_ACCESS, false, entry.th32ProcessID);
+            const auto handle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, entry.th32ProcessID);
             [[unlikely]] if (!handle)
             {
                 CloseHandle(snapshot);
@@ -82,7 +82,7 @@ bool gensokyo::WinProcess::attach_by_window_name(std::string_view window_name, s
         return false;
 
     GetWindowThreadProcessId(hwnd, reinterpret_cast<LPDWORD>(&_pid));
-    _handle = OpenProcess(PROCESS_ALL_ACCESS, false, _pid);
+    _handle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, false, _pid);
 
     if (!_handle)
     {
