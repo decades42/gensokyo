@@ -1,7 +1,5 @@
 #pragma once
 
-// #include "../process.hpp"
-
 namespace gensokyo
 {
     class WinProcess : public impl::Process

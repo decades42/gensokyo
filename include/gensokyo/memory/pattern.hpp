@@ -116,11 +116,11 @@ namespace gensokyo::pattern
             std::vector<HexData> bytes;
         };
 
-        gensokyo::Address find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
-        gensokyo::Address find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
+        gensokyo::Address find_brute_force(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept;
+        gensokyo::Address find_std(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept;
 
         template <typename SIMD>
-        gensokyo::Address find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept;
+        gensokyo::Address find_simd(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept;
     }
 
     gensokyo::Address find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern) noexcept;

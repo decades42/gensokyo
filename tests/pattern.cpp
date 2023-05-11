@@ -323,7 +323,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_brute_force(buffer, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_brute_force(buffer.data(), buffer.size(), pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -333,7 +333,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_std(buffer, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_std(buffer.data(), buffer.size(), pattern.pattern.bytes);
             INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -343,7 +343,8 @@ TEST_CASE("PatternBenchmark", "FindPattern")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer.data(), buffer.size(), pattern.pattern.bytes);
+            INFO("Scanning " << pattern.name);
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
     }
@@ -352,7 +353,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
     {
         for (auto&& pattern : patterns)
         {
-            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer, pattern.pattern.bytes);
+            auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer.data(), buffer.size(), pattern.pattern.bytes);
             INFO("Scanning " << pattern.name << " with bytes.size() " << pattern.pattern.size());
             REQUIRE(buffer_data_ + pattern.offset == res.ptr);
         }
@@ -376,7 +377,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_brute_force(buffer, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_brute_force(buffer.data(), buffer.size(), pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -389,7 +390,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_std(buffer, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_std(buffer.data(), buffer.size(), pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -402,7 +403,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iAVX2>(buffer.data(), buffer.size(), pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }
@@ -415,7 +416,7 @@ TEST_CASE("PatternBenchmark", "FindPattern")
               {
                   for (auto&& pattern : patterns)
                   {
-                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer, pattern.pattern.bytes);
+                      auto res = gensokyo::pattern::impl::find_simd<gensokyo::simd::iSSE>(buffer.data(), buffer.size(), pattern.pattern.bytes);
                       INFO("Scanning " << pattern.name);
                       REQUIRE(buffer_data_ + pattern.offset == res.ptr);
                   }

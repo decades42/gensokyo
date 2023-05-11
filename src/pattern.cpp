@@ -1,18 +1,18 @@
 #include <gensokyo.hpp>
 #include <bitset>
 
-gensokyo::Address gensokyo::pattern::impl::find_brute_force(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
+gensokyo::Address gensokyo::pattern::impl::find_brute_force(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept
 {
     const auto pattern_size = pattern.size();
-    const auto end          = data.end() - pattern_size;
+    const std::uint8_t* end = data + size - pattern_size;
 
-    for (auto current = data.begin(); current <= end; ++current)
+    for (const std::uint8_t* current = data; current <= end; ++current)
     {
         bool found = true;
 
         for (std::size_t j = 0; j < pattern_size; ++j)
         {
-            if (const auto& pattern_byte = pattern[j]; pattern_byte && *pattern_byte != *(current + j))
+            if (const auto& pattern_byte = pattern[j]; pattern_byte && *pattern_byte != current[j])
             {
                 found = false;
                 break;
@@ -21,20 +21,20 @@ gensokyo::Address gensokyo::pattern::impl::find_brute_force(const std::span<std:
 
         if (found)
         {
-            return &*current;
+            return current;
         }
     }
     return {};
 }
 
 // https://github.com/BasedInc/libhat
-gensokyo::Address gensokyo::pattern::impl::find_std(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
+gensokyo::Address gensokyo::pattern::impl::find_std(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept
 {
     const auto pattern_size = pattern.size();
-    const auto end          = data.end() - pattern_size;
+    std::uint8_t* end       = data + size - pattern_size;
     const auto first_byte   = pattern[0].value();
 
-    for (auto current = data.begin(); current <= end; ++current)
+    for (std::uint8_t* current = data; current <= end; ++current)
     {
         current = std::find(current, end, first_byte);
 
@@ -60,14 +60,14 @@ gensokyo::Address gensokyo::pattern::impl::find_std(const std::span<std::uint8_t
 }
 
 template <typename SIMD>
-gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_t>& data, const std::span<HexData>& pattern) noexcept
+gensokyo::Address gensokyo::pattern::impl::find_simd(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept
 {
     constexpr int simd_length = SIMD::simd_length;
     const auto pattern_size   = pattern.size();
 
     // when pattern size is larger than the current cpu instruction supports, fallback to std implementation
     if (pattern_size > simd_length)
-        return find_std(data, pattern);
+        return find_std(data, size, pattern);
 
     auto make_pattern_simd = [&]
     {
@@ -85,16 +85,16 @@ gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_
         return std::make_pair(SIMD::load_unaligned(bytes.data()), SIMD::load_unaligned(masks.data()));
     };
 
-    const uint8_t* current = data.data();
-    const uint8_t* end     = current + data.size();
+    const uint8_t* current = data;
+    const uint8_t* end     = current + size;
 
     // pattern data
     const auto first_byte                     = SIMD::set1_epi8(static_cast<int8_t>(pattern[0].value()));
     const auto [pattern_bytes, pattern_masks] = make_pattern_simd();
 
     // load dataset into simd
-    auto simd_data_ptr        = SIMD::cast(data.data());
-    const auto num_iterations = static_cast<size_t>(end - pattern_size - data.data()) / simd_length;
+    auto simd_data_ptr        = SIMD::cast(data);
+    const auto num_iterations = static_cast<size_t>(end - pattern_size - data) / simd_length;
     auto simd_end_ptr         = simd_data_ptr + num_iterations;
 
     for (; simd_data_ptr != simd_end_ptr; ++simd_data_ptr)
@@ -135,7 +135,7 @@ gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_
             // If the entire pattern is matched, return the address of the match
             if (matched)
             {
-                return byte_ptr;
+                return { const_cast<std::uint8_t*>(byte_ptr) };
             }
 
             // Clear the least significant set bit and continue searching for matches
@@ -147,9 +147,8 @@ gensokyo::Address gensokyo::pattern::impl::find_simd(const std::span<std::uint8_
     }
 
     // Look in remaining bytes that couldn't be grouped into simd_length * 8 bits
-
-    const auto remaining_size = reinterpret_cast<uintptr_t>(end) - reinterpret_cast<uintptr_t>(simd_data_ptr);
-    return find_std(std::span(reinterpret_cast<std::uint8_t*>(simd_data_ptr), remaining_size), pattern);
+    data = reinterpret_cast<std::uint8_t*>(simd_data_ptr);
+    return find_std(data, end - data, pattern);
 }
 
 gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, const std::span<impl::HexData>& pattern) noexcept
@@ -160,12 +159,12 @@ gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, c
     {
         const auto pattern_size = pattern.size();
         if (pattern_size <= 33 && arch == CPUArch::AVX2)
-            return impl::find_simd<simd::iAVX2>(data, pattern);
+            return impl::find_simd<simd::iAVX2>(data.data(), data.size(), pattern);
         if (pattern_size <= 17)
-            return impl::find_simd<simd::iSSE>(data, pattern);
+            return impl::find_simd<simd::iSSE>(data.data(), data.size(), pattern);
     }
 
-    return impl::find_std(data, pattern);
+    return impl::find_std(data.data(), data.size(), pattern);
 }
 
 gensokyo::Address gensokyo::pattern::find(const std::span<std::uint8_t>& data, impl::Pattern<> pattern) noexcept

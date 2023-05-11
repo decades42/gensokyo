@@ -17,7 +17,7 @@ namespace gensokyo::impl
         {
             T res {};
             if (!read(address, &res, sizeof(T)))
-                return std::nullopt_t;
+                return {};
 
             return res;
         }
@@ -39,17 +39,17 @@ namespace gensokyo::impl
         }
 
       protected:
-        virtual bool read_impl(std::uintptr_t address, void* buffer, std::size_t size)
+        virtual bool read_impl([[maybe_unused]] std::uintptr_t address, [[maybe_unused]] void* buffer, [[maybe_unused]] std::size_t size)
         {
             return true;
         }
 
-        virtual bool write_impl(std::uintptr_t address, void* buffer, std::size_t size)
+        virtual bool write_impl([[maybe_unused]] std::uintptr_t address, [[maybe_unused]] void* buffer, [[maybe_unused]] std::size_t size)
         {
             return true;
         }
 
-        virtual bool attach_by_process_name(std::string_view process_name)
+        virtual bool attach_by_process_name([[maybe_unused]] std::string_view process_name)
         {
             return true;
         }
