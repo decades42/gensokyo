@@ -17,7 +17,7 @@ namespace gensokyo::impl
         {
             T res {};
             if (!read(address, &res, sizeof(T)))
-                return {};
+                return std::nullopt;
 
             return res;
         }
