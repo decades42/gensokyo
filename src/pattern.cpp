@@ -1,5 +1,4 @@
 #include <gensokyo.hpp>
-#include <bitset>
 
 gensokyo::Address gensokyo::pattern::impl::find_brute_force(std::uint8_t* data, std::size_t size, const std::span<HexData>& pattern) noexcept
 {

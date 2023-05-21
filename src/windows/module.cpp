@@ -20,7 +20,7 @@ void gensokyo::impl::Module::get_module_nfo(std::string_view mod, const Function
     if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
         throw std::runtime_error("Invalid dos magic.");
 
-    const auto bytes = reinterpret_cast<std::uint8_t>(handle);
+    const auto bytes = reinterpret_cast<std::uint8_t*>(handle);
 
     const auto nt_header = reinterpret_cast<PIMAGE_NT_HEADERS>(bytes + dos_header->e_lfanew);
 
@@ -49,7 +49,7 @@ void gensokyo::impl::Module::get_module_nfo(std::string_view mod, const Function
 
     if (func)
     {
-        const std::vector<uint8_t> data(bytes, bytes + _size);
+        const std::vector data(bytes, bytes + _size);
         func(data);
     }
 }
