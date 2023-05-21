@@ -29,14 +29,14 @@ gensokyo::WinProcess::~WinProcess()
 
 bool gensokyo::WinProcess::read_impl(const std::uintptr_t address, void* buffer, const std::size_t size)
 {
-    std::size_t read_bytes {};
+    SIZE_T read_bytes {};
     ReadProcessMemory(_handle, reinterpret_cast<void*>(address), buffer, size, &read_bytes);
     return read_bytes == size;
 }
 
 bool gensokyo::WinProcess::write_impl(const std::uintptr_t address, void* buffer, const std::size_t size)
 {
-    std::size_t written_bytes {};
+    SIZE_T written_bytes {};
     WriteProcessMemory(_handle, reinterpret_cast<void*>(address), buffer, size, &written_bytes);
     return written_bytes == size;
 }
